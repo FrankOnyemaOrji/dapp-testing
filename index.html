@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Token Transfer DApp</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 40px;
+      }
+      button {
+        padding: 10px;
+        font-size: 16px;
+      }
+      input {
+        padding: 10px;
+        font-size: 14px;
+        margin: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>ERC-20 Token Transfer DApp</h1>
+    <button onclick="connectWallet()">Connect Wallet</button>
+    <div id="accountDisplay"></div>
+    <h2>Check Balance</h2>
+    <input type="text" id="balanceOfAddress" placeholder="Enter Address" />
+    <button onclick="checkBalance()">Check Balance</button>
+    <p id="balanceResult"></p>
+    <h2>Transfer Tokens</h2>
+    <input type="text" id="recipientAddress" placeholder="Recipient Address" />
+    <input type="number" id="transferAmount" placeholder="Amount" />
+    <button onclick="transferTokens()">Transfer</button>
+    <p id="transferStatus"></p>
+
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.6.1/dist/web3.min.js"></script>
+    <script>
+      let web3;
+      let contract;
+      const contractAddress = "0x96C7c334dC2D01AC8c678064DCDA8C1A600e80d5"; // Replace with deployed contract address
+
+      async function connectWallet() {
+        if (window.ethereum) {
+          await window.ethereum.request({ method: "eth_requestAccounts" });
+          web3 = new Web3(window.ethereum);
+          const accounts = await web3.eth.getAccounts();
+          document.getElementById("accountDisplay").innerText =
+            "Connected Account: " + accounts[0];
+
+          // Load ABI from external file and initialize the contract
+          const response = await fetch("./TokenABI.json"); // Load the ABI file
+          const abi = await response.json();
+          contract = new web3.eth.Contract(abi, contractAddress);
+        } else {
+          alert("Please install MetaMask.");
+        }
+      }
+
+      async function checkBalance() {
+        const address = document.getElementById("balanceOfAddress").value;
+        const balance = await contract.methods.balanceOf(address).call();
+        document.getElementById("balanceResult").innerText =
+          "Balance: " + balance;
+      }
+
+      async function transferTokens() {
+        const accounts = await web3.eth.getAccounts();
+        const recipient = document.getElementById("recipientAddress").value;
+        const amount = document.getElementById("transferAmount").value;
+        await contract.methods
+          .transfer(recipient, amount)
+          .send({ from: accounts[0] });
+        document.getElementById("transferStatus").innerText =
+          "Transfer successful!";
+      }
+    </script>
+  </body>
+</html>
